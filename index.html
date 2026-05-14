@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>Balta Media</title>
+    <title>Niki Chiton Jesus</title>
     <!-- Etiquetas SEO -->
-    <link rel="canonical" href="https://media.baltaanay.org" id="canonicalLink">
-    <link rel="alternate" media="only screen and (max-width: 640px)" href="https://app.baltaanay.org/" id="alternateLink">
+    <link rel="canonical" href="https://podcast.nikichitonjesus.org" id="canonicalLink">
+    <link rel="alternate" media="only screen and (max-width: 640px)" href="https://appod.baltaanay.org/" id="alternateLink">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Fuentes -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
     <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="https://balta-media.odoo.com/web/image/1101-2d795e8f/Blues-v1.webp">
-    <link rel="icon" type="image/png" sizes="16x16" href="https://balta-media.odoo.com/web/image/1101-2d795e8f/Blues-v1.webp">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://nikichitonjesus.odoo.com/web/image/1663-46157754/Niki%2520Chiton%2520Jesus%2520%281%29.webp">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://nikichitonjesus.odoo.com/web/image/1663-46157754/Niki%2520Chiton%2520Jesus%2520%281%29.webp">
     <!-- Estilos personalizados -->
     <link rel="stylesheet" href="/styles.css">
 
-    <!-- ESTILOS BASE -->
+    <!-- ESTILOS BASE MEJORADOS -->
     <style id="sidebar-base-styles">
         * {
             box-sizing: border-box;
@@ -149,20 +149,6 @@
         .sidebar-rec-item-info { flex: 1; min-width: 0; }
         .sidebar-rec-item-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .sidebar-rec-item-author { font-size: 11px; opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sidebar-rec-play-btn {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-        }
-        .sidebar-rec-play-btn:hover { background: rgba(255,255,255,0.2); }
-        .sidebar-rec-play-btn svg { width: 18px; height: 18px; fill: white; }
         /* MAIN AREA */
         .main-area {
             grid-area: main-area;
@@ -205,7 +191,7 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             padding: 1.25rem 1rem;
-            padding-bottom: 140px;   /* Espacio para footer/derechos de autor */
+            padding-bottom: 140px;
         }
         @media (max-width: 768px) {
             body {
@@ -217,18 +203,17 @@
 </head>
 <body class="bg-[#050505] text-white font-[Plus_Jakarta_Sans]">
 
-<!-- Sidebar (se genera dinámicamente con JS) -->
+<!-- Sidebar (generado dinámicamente) -->
 <aside class="sidebar-desktop collapsed" id="sidebarDesktop"></aside>
 
 <!-- Área principal -->
 <div class="main-area">
-    <!-- Header + Filtros -->
     <div class="header-container" id="headerContainer">
         <header id="main-header">
             <div class="flex items-center justify-between">
                 <a href="/" class="flex items-center gap-2" data-link>
-                    <img src="https://balta-media.odoo.com/web/image/1097-db212070/BNs.webp" alt="Balta Media" class="w-6 h-6 sm:w-8 sm:h-8 rounded-lg object-cover" loading="lazy">
-                    <span class="text-lg sm:text-xl font-bold text-white">Balta Media</span>
+                    <img src="https://nikichitonjesus.odoo.com/web/image/1668-134717bf/Comp%20Logo%20con%20fondo.svg" alt="Niki Chiton Jesus" class="w-6 h-6 sm:w-8 sm:h-8 rounded-lg object-cover" loading="lazy">
+                    <span class="text-lg sm:text-xl font-bold text-white">Niki Chiton Jesus</span>
                 </a>
                 <div class="flex items-center gap-3 sm:gap-4">
                     <a href="/novedades" class="relative text-gray-400 hover:text-white" data-link>
@@ -248,7 +233,6 @@
         </div>
     </div>
 
-    <!-- Contenido con scroll principal -->
     <main id="content"></main>
 </div>
 
@@ -268,170 +252,142 @@
     </div>
 </div>
 
-<!-- Script sidebar -->
+<!-- Script sidebar CORREGIDO (usa window.router) -->
 <script type="module">
-import { episodios, getSerieById } from '/episodios.js';
-(function() {
-    const SIDEBAR_CONFIG = { BREAKPOINT: 768 };
-    let sidebarInstance = {
-        initialized: false,
-        currentState: localStorage.getItem('sidebar_state') || 'collapsed',
-        isMobile: window.innerWidth <= SIDEBAR_CONFIG.BREAKPOINT
-    };
-    function getRandomEpisodes(count = 12) {
-        const shuffled = [...episodios].sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, count);
-    }
-    function renderSidebar() {
-        const sidebar = document.createElement('aside');
-        sidebar.className = `sidebar-desktop ${sidebarInstance.currentState}`;
-        sidebar.id = 'sidebarDesktop';
-        const toggle = document.createElement('div');
-        toggle.className = 'sidebar-toggle';
-        toggle.id = 'sidebarDesktopToggle';
-        toggle.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>';
-        const nav = document.createElement('div');
-        nav.className = 'sidebar-nav';
-        nav.innerHTML = `
-            <a href="/" class="sidebar-nav-item" title="Inicio" data-link>
-                <img src="https://balta-media.odoo.com/web/image/798-1b947c8d/Home%20%282%29.webp" alt="Inicio" loading="lazy"><span>Inicio</span>
-            </a>
-            <a href="/buscar" class="sidebar-nav-item" title="Buscar" data-link>
-                <img src="https://balta-media.odoo.com/web/image/800-91a2fecc/Search%20%282%29.webp" alt="Buscar" loading="lazy"><span>Buscar</span>
-            </a>
-            <a href="/explorar" class="sidebar-nav-item" title="Explorar" data-link>
-                <img src="https://balta-media.odoo.com/web/image/796-aee658de/Explore.png" alt="Explorar" loading="lazy"><span>Explorar</span>
-            </a>
-            <a href="/subir" class="sidebar-nav-item" title="Crear">
-                <img src="https://balta-media.odoo.com/web/image/885-f3d79ca9/xhbalta-aula.png" alt="Crear" loading="lazy"><span>Crear</span>
-            </a>
-            <a href="/biblioteca" class="sidebar-nav-item" title="Biblioteca" data-link>
-                <img src="https://nikichitonjesus3.odoo.com/web/image/453-f4d8c1eb/user.png" alt="Biblioteca" loading="lazy"><span>Biblioteca</span>
-            </a>
-        `;
-        const recSection = document.createElement('div');
-        recSection.className = 'sidebar-rec-section';
-        recSection.innerHTML = `
-            <div class="sidebar-rec-header">
-                <a href="/novedades" data-link>Recomendados<svg viewBox="0 0 24 24"><path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg></a>
-            </div>
-            <div class="sidebar-rec-list" id="sidebarRecList"></div>
-        `;
-        sidebar.appendChild(toggle);
-        sidebar.appendChild(nav);
-        sidebar.appendChild(recSection);
-        return sidebar;
-    }
-    function populateRecommendations() {
-        const container = document.getElementById('sidebarRecList');
-        if (!container) return;
-        container.innerHTML = '';
-        const selected = getRandomEpisodes(12);
-        if (!selected.length) {
-            container.innerHTML = '<div style="color:#aaa; padding:8px;">No hay episodios disponibles</div>';
-            return;
+    import { episodios, getSerieById } from './lib/episodios.js';
+
+    (function() {
+        const SIDEBAR_CONFIG = { BREAKPOINT: 768 };
+        let sidebarInstance = {
+            initialized: false,
+            currentState: localStorage.getItem('sidebar_state') || 'collapsed',
+            isMobile: window.innerWidth <= SIDEBAR_CONFIG.BREAKPOINT
+        };
+
+        function getRandomEpisodes(count = 12) {
+            if (!episodios || !episodios.length) return [];
+            const shuffled = [...episodios].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
         }
-        selected.forEach(ep => {
-            const serie = getSerieById(ep.seriesid) || {};
-            const item = document.createElement('div');
-            item.className = 'sidebar-rec-item';
-            item.innerHTML = `
-                <img src="${serie.portada_serie || ep.coverUrl || 'https://via.placeholder.com/40'}" alt="${ep.title}" loading="lazy">
-                <div class="sidebar-rec-item-info">
-                    <div class="sidebar-rec-item-title">${ep.title}</div>
-                    <div class="sidebar-rec-item-author">${ep.author || serie.titulo_serie || '—'}</div>
-                </div>
-                <button class="sidebar-rec-play-btn" data-url="${ep.detailUrl || '#'}">
-                    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                </button>
+
+        function renderSidebar() {
+            const sidebar = document.createElement('aside');
+            sidebar.className = `sidebar-desktop ${sidebarInstance.currentState}`;
+            sidebar.id = 'sidebarDesktop';
+
+            const toggle = document.createElement('div');
+            toggle.className = 'sidebar-toggle';
+            toggle.id = 'sidebarDesktopToggle';
+            toggle.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>';
+
+            const nav = document.createElement('div');
+            nav.className = 'sidebar-nav';
+            nav.innerHTML = `
+                <a href="/" class="sidebar-nav-item" title="Inicio" data-link>
+                    <img src="https://balta-media.odoo.com/web/image/798-1b947c8d/Home%20%282%29.webp" alt="Inicio" loading="lazy"><span>Inicio</span>
+                </a>
+                <a href="/buscar" class="sidebar-nav-item" title="Buscar" data-link>
+                    <img src="https://balta-media.odoo.com/web/image/800-91a2fecc/Search%20%282%29.webp" alt="Buscar" loading="lazy"><span>Buscar</span>
+                </a>
+                <a href="/explorar" class="sidebar-nav-item" title="Explorar" data-link>
+                    <img src="https://balta-media.odoo.com/web/image/796-aee658de/Explore.png" alt="Explorar" loading="lazy"><span>Explorar</span>
+                </a>
+                <a href="/subir" class="sidebar-nav-item" title="Crear">
+                    <img src="https://balta-media.odoo.com/web/image/885-f3d79ca9/xhbalta-aula.png" alt="Crear" loading="lazy"><span>Crear</span>
+                </a>
+                <a href="/biblioteca" class="sidebar-nav-item" title="Biblioteca" data-link>
+                    <img src="https://nikichitonjesus3.odoo.com/web/image/453-f4d8c1eb/user.png" alt="Biblioteca" loading="lazy"><span>Biblioteca</span>
+                </a>
             `;
-            const btn = item.querySelector('button');
-            btn.addEventListener('click', e => {
-                e.preventDefault();
-                e.stopPropagation();
-                const url = btn.dataset.url;
-                if (url && url !== '#' && window.router) {
-                    window.history.pushState(null, null, url);
-                    window.router();
-                }
-            });
-            item.addEventListener('click', e => {
-                if (e.target.tagName !== 'BUTTON') {
-                    e.preventDefault();
-                    const url = ep.detailUrl;
-                    if (url && url !== '#' && window.router) {
-                        window.history.pushState(null, null, url);
-                        window.router();
-                    }
-                }
-            });
-            container.appendChild(item);
-        });
-    }
-    function setActiveNavItem() {
-        const currentPath = window.location.pathname;
-        document.querySelectorAll('.sidebar-nav-item').forEach(item => {
-            const href = item.getAttribute('href');
-            item.classList.toggle('active',
-                (href === currentPath) ||
-                (href === '/' && currentPath === '/') ||
-                (href === '/buscar' && currentPath === '/buscar')
-            );
-        });
-    }
-    function initSidebarToggle() {
-        const sidebar = document.getElementById('sidebarDesktop');
-        const toggle = document.getElementById('sidebarDesktopToggle');
-        if (!sidebar || !toggle) return;
-        const newToggle = toggle.cloneNode(true);
-        toggle.parentNode.replaceChild(newToggle, toggle);
-        newToggle.addEventListener('click', e => {
-            e.stopPropagation();
-            e.preventDefault();
-            const isCollapsed = sidebar.classList.contains('collapsed');
-            if (isCollapsed) {
-                sidebar.classList.remove('collapsed');
-                sidebar.classList.add('expanded');
-            } else {
-                sidebar.classList.add('collapsed');
-                sidebar.classList.remove('expanded');
-            }
-            localStorage.setItem('sidebar_state', isCollapsed ? 'expanded' : 'collapsed');
-        });
-    }
-    function initSidebar() {
-        sidebarInstance.isMobile = window.innerWidth <= SIDEBAR_CONFIG.BREAKPOINT;
-        const oldSidebar = document.querySelector('.sidebar-desktop');
-        if (oldSidebar) oldSidebar.remove();
-        if (sidebarInstance.isMobile) return;
-        const sidebar = renderSidebar();
-        document.body.insertBefore(sidebar, document.body.firstChild);
-        populateRecommendations();
-        initSidebarToggle();
-        setActiveNavItem();
-        sidebarInstance.initialized = true;
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initSidebar);
-    } else {
-        initSidebar();
-    }
-    window.addEventListener('resize', () => {
-        const wasMobile = sidebarInstance.isMobile;
-        const isMobileNow = window.innerWidth <= SIDEBAR_CONFIG.BREAKPOINT;
-        if (wasMobile !== isMobileNow) {
-            sidebarInstance.isMobile = isMobileNow;
-            initSidebar();
+
+            const recSection = document.createElement('div');
+            recSection.className = 'sidebar-rec-section';
+            recSection.innerHTML = `
+                <div class="sidebar-rec-header">
+                    <a href="/novedades" data-link>Recomendados<svg viewBox="0 0 24 24"><path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg></a>
+                </div>
+                <div class="sidebar-rec-list" id="sidebarRecList"></div>
+            `;
+
+            sidebar.appendChild(toggle);
+            sidebar.appendChild(nav);
+            sidebar.appendChild(recSection);
+            return sidebar;
         }
-    });
-    document.addEventListener('spa-navigation', setActiveNavItem);
-    window.addEventListener('popstate', setActiveNavItem);
-    window.sidebarAPI = {
-        refresh: populateRecommendations,
-        setActive: setActiveNavItem,
-        toggle: () => {
+
+        function populateRecommendations() {
+            const container = document.getElementById('sidebarRecList');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const selected = getRandomEpisodes(12);
+            if (!selected.length) {
+                container.innerHTML = '<div style="color:#aaa; padding:8px;">No hay episodios disponibles</div>';
+                return;
+            }
+
+            selected.forEach(ep => {
+                const serie = getSerieById(ep.seriesid) || {};
+                const targetUrl = ep.detailUrl || '#';
+                const item = document.createElement('div');
+                item.className = 'sidebar-rec-item';
+                // Usamos data-link para que el delegado global capture el clic
+                item.setAttribute('data-link', '');
+                item.setAttribute('href', targetUrl);
+                item.innerHTML = `
+                    <img src="${serie.portada_serie || ep.coverUrl || 'https://via.placeholder.com/40'}" alt="${ep.title}" loading="lazy">
+                    <div class="sidebar-rec-item-info">
+                        <div class="sidebar-rec-item-title">${escapeHtml(ep.title)}</div>
+                        <div class="sidebar-rec-item-author">${escapeHtml(ep.author || serie.titulo_serie || '—')}</div>
+                    </div>
+                `;
+                // Escucha el clic en el item completo para navegación SPA
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (targetUrl && targetUrl !== '#' && window.router) {
+                        window.history.pushState(null, null, targetUrl);
+                        window.router();
+                    } else if (targetUrl && targetUrl !== '#') {
+                        // Fallback: navegación tradicional
+                        window.location.href = targetUrl;
+                    }
+                });
+                container.appendChild(item);
+            });
+        }
+
+        // Función auxiliar para escapar HTML
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        function setActiveNavItem() {
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+                const href = item.getAttribute('href');
+                item.classList.toggle('active',
+                    (href === currentPath) ||
+                    (href === '/' && currentPath === '/') ||
+                    (href === '/buscar' && currentPath === '/buscar')
+                );
+            });
+        }
+
+        function initSidebarToggle() {
             const sidebar = document.getElementById('sidebarDesktop');
-            if (sidebar) {
+            const toggle = document.getElementById('sidebarDesktopToggle');
+            if (!sidebar || !toggle) return;
+            const newToggle = toggle.cloneNode(true);
+            toggle.parentNode.replaceChild(newToggle, toggle);
+            newToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
                 const isCollapsed = sidebar.classList.contains('collapsed');
                 if (isCollapsed) {
                     sidebar.classList.remove('collapsed');
@@ -441,37 +397,94 @@ import { episodios, getSerieById } from '/episodios.js';
                     sidebar.classList.remove('expanded');
                 }
                 localStorage.setItem('sidebar_state', isCollapsed ? 'expanded' : 'collapsed');
+            });
+        }
+
+        function initSidebar() {
+            sidebarInstance.isMobile = window.innerWidth <= SIDEBAR_CONFIG.BREAKPOINT;
+            const oldSidebar = document.querySelector('.sidebar-desktop');
+            if (oldSidebar) oldSidebar.remove();
+
+            if (sidebarInstance.isMobile) return;
+
+            try {
+                const sidebar = renderSidebar();
+                document.body.insertBefore(sidebar, document.body.firstChild);
+                populateRecommendations();
+                initSidebarToggle();
+                setActiveNavItem();
+                sidebarInstance.initialized = true;
+            } catch (err) {
+                console.error('Error al inicializar sidebar:', err);
             }
         }
-    };
-})();
-</script>
 
-<!-- HEADER HIDE ON SCROLL (versión definitiva - solo escucha #content) -->
-<script>
-    let lastScrollTop = 0;
-    const headerContainer = document.getElementById('headerContainer');
-
-    function handleHeaderScroll() {
-        const st = document.getElementById('content').scrollTop;
-
-        if (Math.abs(st - lastScrollTop) < 15) return;
-
-        if (st > lastScrollTop && st > 80) {
-            headerContainer.classList.add('hidden');
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initSidebar);
         } else {
-            headerContainer.classList.remove('hidden');
+            initSidebar();
         }
 
-        lastScrollTop = st;
-    }
+        window.addEventListener('resize', () => {
+            const wasMobile = sidebarInstance.isMobile;
+            const isMobileNow = window.innerWidth <= SIDEBAR_CONFIG.BREAKPOINT;
+            if (wasMobile !== isMobileNow) {
+                sidebarInstance.isMobile = isMobileNow;
+                initSidebar();
+            }
+        });
 
-    document.getElementById('content').addEventListener('scroll', handleHeaderScroll, { passive: true });
+        document.addEventListener('spa-navigation', setActiveNavItem);
+        window.addEventListener('popstate', setActiveNavItem);
+
+        window.sidebarAPI = {
+            refresh: populateRecommendations,
+            setActive: setActiveNavItem,
+            toggle: () => {
+                const sidebar = document.getElementById('sidebarDesktop');
+                if (sidebar) {
+                    const isCollapsed = sidebar.classList.contains('collapsed');
+                    if (isCollapsed) {
+                        sidebar.classList.remove('collapsed');
+                        sidebar.classList.add('expanded');
+                    } else {
+                        sidebar.classList.add('collapsed');
+                        sidebar.classList.remove('expanded');
+                    }
+                    localStorage.setItem('sidebar_state', isCollapsed ? 'expanded' : 'collapsed');
+                }
+            }
+        };
+    })();
 </script>
 
-<!-- Cargar el router principal -->
+<!-- HEADER HIDE ON SCROLL (mejorado) -->
+<script>
+    (function() {
+        let lastScrollTop = 0;
+        const headerContainer = document.getElementById('headerContainer');
+        const contentEl = document.getElementById('content');
+
+        function handleHeaderScroll() {
+            if (!contentEl || !headerContainer) return;
+            const st = contentEl.scrollTop;
+            if (Math.abs(st - lastScrollTop) < 15) return;
+            if (st > lastScrollTop && st > 80) {
+                headerContainer.classList.add('hidden');
+            } else {
+                headerContainer.classList.remove('hidden');
+            }
+            lastScrollTop = st;
+        }
+
+        if (contentEl) {
+            contentEl.addEventListener('scroll', handleHeaderScroll, { passive: true });
+        }
+    })();
+</script>
+
+<!-- Cargar el router principal (main.js) -->
 <script type="module" src="/main.js"></script>
 <script src="./service.js"></script>
 </body>
 </html>
-
