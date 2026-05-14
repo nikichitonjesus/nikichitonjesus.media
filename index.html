@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Balta Media</title>
+    <link rel="canonical" href="https://media.baltaanay.org/" id="canonicalLink">
+    <link rel="alternate" media="only screen and (max-width: 640px)" href="https://app.baltaanay.org/" id="alternateLink">
+    <!-- Manifest PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fuentes -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="https://balta-media.odoo.com/web/image/1101-2d795e8f/Blues-v1.webp">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://balta-media.odoo.com/web/image/1101-2d795e8f/Blues-v1.webp">
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="/styles.css">
+
+    <!-- ESTILOS BASE -->
+    <style>
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: #050505;
+        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .main-area {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        .header-container {
+            position: sticky;
+            top: 0;
+            z-index: 60;
+            width: 100%;
+            transition: transform 0.32s cubic-bezier(0.25, 0.1, 0.25, 1);
+            background: rgba(5,5,5,0.96);
+            backdrop-filter: blur(12px);
+        }
+        .header-container.hidden {
+            transform: translateY(-100%);
+        }
+        #main-header {
+            background: transparent;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        #main-header > div { padding: 0.75rem 1rem; }
+        #category-filters {
+            background: rgba(5,5,5,0.96);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            flex-shrink: 0;
+            transition: transform 0.32s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+        #category-filters.moved-up {
+            transform: translateY(-52px);
+        }
+        #content {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 1.25rem 1rem;
+            padding-bottom: 140px;
+        }
+        .install-button {
+            background: #7b2eda;
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+        .install-button.hidden { display: none; }
+        .install-button.update { background: #f59e0b; }
+        .install-button img {
+            width: 20px; height: 20px;
+            filter: brightness(0) invert(1);
+        }
+    </style>
+</head>
+<body class="bg-[#050505] text-white font-[Plus_Jakarta_Sans]">
+
+<div class="main-area">
+    <div class="header-container" id="headerContainer">
+        <header id="main-header">
+            <div class="flex items-center justify-between">
+                <a href="/" class="flex items-center gap-2" data-link>
+                    <img src="https://balta-media.odoo.com/web/image/1097-db212070/BNs.webp" alt="Balta Media" class="w-6 h-6 sm:w-8 sm:h-8 rounded-lg object-cover" loading="lazy">
+                    <span class="text-lg sm:text-xl font-bold text-white">Balta Media</span>
+                </a>
+                <div class="flex items-center gap-3 sm:gap-4">
+                    <a href="/novedades" class="relative text-gray-400 hover:text-white" data-link>
+                        <img src="https://balta-media.odoo.com/web/image/796-aee658de/Explore.png" alt="Novedades" class="w-5 h-5" loading="lazy">
+                        <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </a>
+                    <button id="install-button-container" class="install-button hidden">
+                        <img id="install-icon" src="https://nikichitonjesus.odoo.com/web/image/624-ec376d7f/descargar.png" alt="Instalar">
+                        <span id="install-text">Instalar app</span>
+                    </button>
+                    <a href="/my/home" id="profile-link" class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full overflow-hidden" data-link>
+                        <img src="https://balta-media.odoo.com/web/image/793-902e5b33/Search%20%282%29.png" alt="Usuario" class="w-full h-full object-cover" loading="lazy">
+                    </a>
+                </div>
+            </div>
+        </header>
+        <div id="category-filters">
+            <div class="overflow-x-auto no-scrollbar">
+                <div class="flex items-center gap-2 sm:gap-3" id="category-pills"></div>
+            </div>
+        </div>
+    </div>
+    <main id="content"></main>
+</div>
+
+<div id="floating-player" class="fixed bottom-0 left-0 right-0 bg-[#1a1a1a] border-t border-[#333] p-3 flex items-center justify-between z-[10000] backdrop-blur hidden"></div>
+
+<div id="errorModal" class="fixed inset-0 z-[10000] flex items-center justify-center hidden" style="background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);">
+    <div class="bg-[#1e1e2f] rounded-2xl max-w-md w-full p-6 border border-white/10 shadow-2xl">
+        <h3 class="text-xl font-bold text-white mb-3" id="errorModalTitle">Error</h3>
+        <p class="text-gray-300 mb-6" id="errorModalMessage"></p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-end">
+            <a href="https://www.baltaanay.org/contactus" target="_blank" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm font-semibold text-center">Reportar problema</a>
+            <a href="https://www.baltaanay.org/solicitar" target="_blank" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white text-sm font-semibold text-center">Solicitar</a>
+            <button id="closeErrorModal" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white text-sm font-semibold">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- BARRA INFERIOR MÓVIL (AHORA SIEMPRE VISIBLE) -->
+<script>
+(function() {
+    const BOTTOMBAR_CONFIG = { HEIGHT: '60px' }; // Eliminamos BREAKPOINT
+    const bottomBarStyles = `
+        .bottom-bar-mobile {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: ${BOTTOMBAR_CONFIG.HEIGHT};
+            background: #0F0F0F; color: #fff; z-index: 950;
+            display: flex; align-items: center; justify-content: space-around;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+        }
+        .bottom-bar-item {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: rgba(255,255,255,0.8); text-decoration: none; font-size: 11px; gap: 4px;
+            padding: 8px 12px; border-radius: 8px; transition: all 0.2s; flex: 1;
+        }
+        .bottom-bar-item.active { color: white; background: rgba(255,255,255,0.15); }
+        .bottom-bar-item img { width: 24px; height: 24px; filter: brightness(1.2); }
+        body.with-bottom-bar { margin-bottom: ${BOTTOMBAR_CONFIG.HEIGHT}; }
+        #floating-player { bottom: ${BOTTOMBAR_CONFIG.HEIGHT} !important; }
+    `;
+
+    function injectStyles() {
+        if (document.getElementById('bottom-bar-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'bottom-bar-styles';
+        style.textContent = bottomBarStyles;
+        document.head.appendChild(style);
+    }
+
+    function renderBottomBar() {
+        const bar = document.createElement('nav');
+        bar.className = 'bottom-bar-mobile';
+        bar.id = 'bottomBarMobile';
+        const items = [
+            { href: '/', icon: 'https://balta-media.odoo.com/web/image/798-1b947c8d/Home%20%282%29.webp', label: 'Inicio' },
+            { href: '/buscar', icon: 'https://www.baltaanay.org/web/image/986-2bf9d2bb/Search%20%282%29.webp', label: 'Buscar' },
+            { href: '/explorar', icon: 'https://balta-media.odoo.com/web/image/796-aee658de/Explore.png', label: 'Explorar' },
+            { href: '/subir', icon: 'https://www.baltaanay.org/web/image/991-1c3c204a/subir.webp', label: 'Crear' },
+            { href: '/my/home', icon: 'https://nikichitonjesus3.odoo.com/web/image/453-f4d8c1eb/user.png', label: 'Perfil' }
+        ];
+        items.forEach(item => {
+            const link = document.createElement('a');
+            link.href = item.href;
+            link.className = 'bottom-bar-item';
+            link.setAttribute('data-link', 'true');
+            link.innerHTML = `<img src="${item.icon}" alt="${item.label}" loading="lazy"><span>${item.label}</span>`;
+            bar.appendChild(link);
+        });
+        return bar;
+    }
+
+    function setActiveBottomItem() {
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.bottom-bar-item').forEach(item => {
+            const href = item.getAttribute('href');
+            item.classList.toggle('active', href === currentPath || (href === '/' && currentPath === '/'));
+        });
+    }
+
+    function initBottomBar() {
+        // Eliminamos la barra anterior si existe
+        document.getElementById('bottomBarMobile')?.remove();
+        
+        // Inyectamos estilos (solo una vez)
+        injectStyles();
+        
+        // Creamos y añadimos la barra
+        const bar = renderBottomBar();
+        document.body.appendChild(bar);
+        
+        // Marcamos el ítem activo
+        setActiveBottomItem();
+        
+        // Añadimos clase al body para dar margen inferior
+        document.body.classList.add('with-bottom-bar');
+    }
+
+    // Inicializar cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', initBottomBar);
+    
+    // Reaccionar a cambios de navegación SPA
+    window.addEventListener('popstate', setActiveBottomItem);
+    document.addEventListener('spa-navigation', setActiveBottomItem);
+    
+    // En resize no necesitamos hacer nada especial, la barra ya es fija
+})();
+</script>
+
+<!-- PWA con tus iconos -->
+<script>
+(function() {
+    let deferredPrompt = null;
+    let isUpdateAvailable = false;
+    const installBtn = document.getElementById('install-button-container');
+    const installText = document.getElementById('install-text');
+    const installIcon = document.getElementById('install-icon');
+    const profileLink = document.getElementById('profile-link');
+
+    const ICONS = {
+        install: "https://nikichitonjesus.odoo.com/web/image/624-ec376d7f/descargar.png",
+        update: "https://nikichitonjesus.odoo.com/web/image/775-4e2e83af/repetir-.webp",
+        openApp: "https://nikichitonjesus.odoo.com/web/image/993-70b1b1d5/userlist.webp",
+        myHome: "https://nikichitonjesus.odoo.com/web/image/776-52d85853/a%C3%B1adir%20a.webp"
+    };
+
+    function isStandalone() {
+        return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    }
+
+    function updateButtonUI() {
+        const standalone = isStandalone();
+        if (standalone) {
+            installBtn.classList.add('hidden');
+            profileLink.classList.remove('hidden');
+            profileLink.innerHTML = `<img src="${ICONS.myHome}" alt="Perfil" class="w-full h-full object-cover" loading="lazy">`;
+            if (isUpdateAvailable) {
+                installBtn.classList.remove('hidden');
+                installBtn.classList.add('update');
+                installText.textContent = 'Actualizar';
+                installIcon.src = ICONS.update;
+            }
+        } else {
+            profileLink.classList.add('hidden');
+            if (isUpdateAvailable) {
+                installBtn.classList.remove('hidden');
+                installBtn.classList.add('update');
+                installText.textContent = 'Actualizar';
+                installIcon.src = ICONS.update;
+            } else if (deferredPrompt) {
+                installBtn.classList.remove('hidden');
+                installBtn.classList.remove('update');
+                installText.textContent = 'Instalar app';
+                installIcon.src = ICONS.install;
+            } else {
+                installBtn.classList.remove('hidden');
+                installBtn.classList.remove('update');
+                installText.textContent = 'Abrir app';
+                installIcon.src = ICONS.openApp;
+            }
+        }
+    }
+
+    window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        deferredPrompt = e;
+        updateButtonUI();
+    });
+
+    installBtn.addEventListener('click', async () => {
+        if (isUpdateAvailable && window.registration?.waiting) {
+            window.registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            window.location.reload();
+            return;
+        }
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            updateButtonUI();
+        } else {
+            window.location.href = "https://app.baltaanay.org/";
+        }
+    });
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => {
+                window.registration = reg;
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    if (newWorker) {
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                isUpdateAvailable = true;
+                                updateButtonUI();
+                            }
+                        });
+                    }
+                });
+            })
+            .catch(err => console.error('SW error:', err));
+    }
+
+    window.matchMedia('(display-mode: standalone)').addEventListener('change', updateButtonUI);
+    updateButtonUI();
+})();
+</script>
+
+<!-- SCROLL HEADER MÓVIL (importante) -->
+<script>
+    let lastScrollTop = 0;
+    function handleHeaderScroll() {
+        const content = document.getElementById('content');
+        if (!content) return;
+        const st = content.scrollTop;
+        const header = document.getElementById('headerContainer');
+        if (!header) return;
+
+        if (Math.abs(st - lastScrollTop) < 15) return;
+
+        if (st > lastScrollTop && st > 80) {
+            header.classList.add('hidden');
+        } else {
+            header.classList.remove('hidden');
+        }
+        lastScrollTop = st;
+    }
+
+    // Esperamos a que #content exista
+    const checkContent = setInterval(() => {
+        const content = document.getElementById('content');
+        if (content) {
+            content.addEventListener('scroll', handleHeaderScroll, { passive: true });
+            clearInterval(checkContent);
+        }
+    }, 100);
+</script>
+
+<!-- Router principal -->
+<script type="module" src="/main.js"></script>
+<script src="./service.js"></script>
+
+<!-- Offline -->
+<script>
+(function() {
+    function showOfflineMessage() {
+        const content = document.getElementById('content');
+        if (content) {
+            content.innerHTML = `
+                <div class="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
+                    <span class="text-6xl mb-4">📡</span>
+                    <h2 class="text-2xl font-bold text-white mb-2">Sin conexión</h2>
+                    <p class="text-gray-300 mb-6">Conéctate para disfrutar del contenido.</p>
+                    <button onclick="window.location.reload()" class="bg-[#7b2eda] hover:bg-[#8f3ef0] text-white font-bold px-6 py-3 rounded-full transition">
+                        Reintentar
+                    </button>
+                </div>
+            `;
+        }
+    }
+    if (!navigator.onLine) showOfflineMessage();
+    window.addEventListener('offline', showOfflineMessage);
+    window.addEventListener('online', () => window.location.reload());
+})();
+</script>
+
+</body>
+</html>
