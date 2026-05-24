@@ -1,7 +1,7 @@
 // explorar.js - Página de exploración con diseño profesional
 // Integrado con player.js y sistema global de playlist
 
-import { getEpisodiosConSerie, getAllEpisodios, series } from './episodios.js';
+import { getEpisodiosConSerie, getAllEpisodios, series } from './lib/episodios.js';
 import { userStorage } from './storage.js';
 import './player.js';  // Asegura que las funciones globales del player estén disponibles
 
