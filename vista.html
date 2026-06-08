@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<title>Embed Player</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none}
+  html,body{width:100%;height:100%;background:#000;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;overflow:hidden}
+  #app{position:fixed;inset:0;display:flex;flex-direction:column;background:#0f0f0f}
+  /* Stage */
+  .stage{position:relative;flex:1;min-height:0;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  video,audio{outline:none}
+  video{width:100%;height:100%;object-fit:contain;background:#000;display:block}
+  /* Audio art */
+  .art{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:clamp(12px,3vw,40px);gap:clamp(10px,2vw,22px);background-size:cover;background-position:center}
+  .art::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.9));z-index:0}
+  .art > *{position:relative;z-index:1}
+  .cover{width:min(46vh,60vw,340px);aspect-ratio:1/1;object-fit:cover;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  .meta h1{font-size:clamp(1.2rem,3.4vw,2rem);font-weight:800;line-height:1.15;word-break:break-word}
+  .meta p{margin-top:6px;opacity:.75;font-size:clamp(.85rem,1.6vw,1rem)}
+
+  /* Overlay */
+  .overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;transition:opacity .25s ease;z-index:5}
+  .overlay.hide{opacity:0;pointer-events:none}
+  .top,.bottom{display:flex;align-items:center;gap:10px;padding:12px 14px;flex-wrap:wrap}
+  .top{background:linear-gradient(to bottom,rgba(0,0,0,.6),transparent)}
+  .bottom-wrap{background:linear-gradient(to top,rgba(0,0,0,.8),transparent);padding:10px 14px 14px}
+  .title-pill{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);padding:6px 14px;border-radius:100px;max-width:70%;overflow:hidden}
+  .title-pill span{font-weight:700;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .grow{flex:1}
+  .right-group{margin-left:auto;display:flex;gap:8px;align-items:center}
+
+  /* Center play */
+  .center{display:flex;justify-content:center;align-items:center;gap:24px}
+  .center .btn{width:54px;height:54px}
+  .center .play{width:78px;height:78px;background:#fff;color:#111}
+
+  /* Buttons */
+  .btn{background:rgba(0,0,0,.55);border:none;border-radius:999px;width:40px;height:40px;color:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(6px);transition:transform .12s ease,background .12s ease}
+  .btn:hover{background:rgba(255,255,255,.18)}
+  .btn:active{transform:scale(.95)}
+  .pill{width:auto;height:36px;padding:0 12px;font-size:.85rem;font-weight:600;gap:6px}
+  .time{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;background:rgba(0,0,0,.55);padding:4px 10px;border-radius:30px;white-space:nowrap}
+
+  /* Progress */
+  .progress{width:100%;height:6px;background:rgba(255,255,255,.25);border-radius:10px;cursor:pointer;margin-bottom:8px;position:relative;touch-action:none}
+  .progress .fill{height:100%;width:0%;background:#f1c40f;border-radius:10px;pointer-events:none}
+  .progress .knob{position:absolute;top:50%;left:0;width:14px;height:14px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);opacity:0;transition:opacity .15s}
+  .progress:hover .knob,.progress:focus .knob{opacity:1}
+
+  /* Popovers */
+  .pop-wrap{position:relative}
+  .pop{position:absolute;bottom:46px;right:0;background:rgba(20,20,30,.96);backdrop-filter:blur(12px);border-radius:14px;padding:6px;display:none;flex-direction:column;gap:2px;min-width:140px;box-shadow:0 10px 30px rgba(0,0,0,.6);z-index:50}
+  .pop.open{display:flex}
+  .pop button{background:transparent;border:none;color:#fff;padding:8px 12px;border-radius:10px;text-align:left;cursor:pointer;font-size:.85rem}
+  .pop button:hover{background:rgba(255,255,255,.1)}
+  .pop button.active{font-weight:700;background:rgba(255,255,255,.08)}
+
+  /* Volume slider */
+  input[type=range]{accent-color:#fff;width:90px}
+
+  /* Loader */
+  .loader{position:absolute;width:54px;height:54px;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .9s linear infinite;display:none;z-index:4}
+  .loader.show{display:block}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  @media (max-width:520px){
+    .time{font-size:.7rem}
+    .pill{height:32px;padding:0 10px;font-size:.78rem}
+    input[type=range]{width:70px}
+    .center{gap:14px}
+    .center .btn{width:46px;height:46px}
+    .center .play{width:64px;height:64px}
+    .title-pill{max-width:60%}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="stage" id="stage">
+    <!-- Audio art view -->
+    <div class="art" id="art" style="display:none">
+      <img class="cover" id="cover" alt="" />
+      <div class="meta">
+        <h1 id="artTitle">Título</h1>
+        <p id="artAuthor"></p>
+      </div>
+    </div>
+
+    <!-- Media -->
+    <video id="video" playsinline preload="metadata" style="display:none"></video>
+    <audio id="audio" preload="metadata" style="display:none"></audio>
+
+    <div class="loader" id="loader"></div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay">
+      <div class="top">
+        <div class="title-pill" id="topTitle"><span id="topTitleText">Título</span></div>
+        <div class="right-group">
+          <button class="btn" id="modeBtn" title="Cambiar modo" style="display:none"></button>
+          <button class="btn" id="fsBtn" title="Pantalla completa"></button>
+        </div>
+      </div>
+
+      <div class="center">
+        <button class="btn" id="back10" aria-label="Retroceder 10s"></button>
+        <button class="btn play" id="playBtn" aria-label="Reproducir"></button>
+        <button class="btn" id="fwd10" aria-label="Avanzar 10s"></button>
+      </div>
+
+      <div class="bottom-wrap">
+        <div class="progress" id="progress" role="slider" aria-label="Progreso" tabindex="0">
+          <div class="fill" id="fill"></div>
+          <div class="knob" id="knob"></div>
+        </div>
+        <div class="bottom">
+          <span class="time" id="time">0:00 / 0:00</span>
+          <div class="grow"></div>
+
+          <div class="pop-wrap">
+            <button class="btn pill" id="speedBtn">1x</button>
+            <div class="pop" id="speedPop"></div>
+          </div>
+
+          <div class="pop-wrap">
+            <button class="btn pill" id="timerBtn" aria-label="Temporizador"></button>
+            <div class="pop" id="timerPop">
+              <button data-min="0">Desactivar</button>
+              <button data-min="15">15 min</button>
+              <button data-min="30">30 min</button>
+              <button data-min="45">45 min</button>
+              <button data-min="60">60 min</button>
+              <button data-min="end">Fin episodio</button>
+            </div>
+          </div>
+
+          <button class="btn" id="muteBtn" aria-label="Silenciar"></button>
+          <input type="range" id="vol" min="0" max="1" step="0.01" value="1" aria-label="Volumen" />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ===== Episodio de prueba (sobreescrito por query params si existen) =====
+  const DEMO = {
+    title: "Episodio de prueba",
+    author: "Lovable Demo",
+    audio: "https://download.samplelib.com/mp3/sample-15s.mp3",
+    video: "https://download.samplelib.com/mp4/sample-5s.mp4",
+    cover: "https://picsum.photos/seed/lovable/600",
+    // mode: "audio" | "video" | "both"  (auto si se omite)
+    mode: "both",
+  };
+
+  // ===== Parse query params =====
+  const qs = new URLSearchParams(location.search);
+  const cfg = {
+    title: qs.get("title") ?? DEMO.title,
+    author: qs.get("author") ?? DEMO.author,
+    audio: qs.get("audio") ?? DEMO.audio,
+    video: qs.get("video") ?? DEMO.video,
+    cover: qs.get("cover") ?? DEMO.cover,
+    mode: qs.get("mode") ?? DEMO.mode,
+  };
+  if (!cfg.audio) cfg.audio = "";
+  if (!cfg.video) cfg.video = "";
+
+  const hasAudio = !!cfg.audio;
+  const hasVideo = !!cfg.video;
+  if (!hasAudio && !hasVideo) {
+    document.body.innerHTML = '<div style="color:#fff;padding:24px;font-family:sans-serif">No se especificó <code>audio</code> ni <code>video</code>.</div>';
+    return;
+  }
+  let mode = cfg.mode;
+  if (mode !== "audio" && mode !== "video" && mode !== "both") {
+    mode = hasVideo && hasAudio ? "both" : hasVideo ? "video" : "audio";
+  }
+  const canSwitch = hasAudio && hasVideo;
+  let showingVideo = (mode === "video") || (mode === "both" && hasVideo);
+
+  // ===== Elements =====
+  const $ = (id) => document.getElementById(id);
+  const stage = $("stage"), art = $("art"), cover = $("cover"),
+        artTitle = $("artTitle"), artAuthor = $("artAuthor"),
+        topTitleText = $("topTitleText"),
+        video = $("video"), audio = $("audio"),
+        overlay = $("overlay"), loader = $("loader"),
+        playBtn = $("playBtn"), back10 = $("back10"), fwd10 = $("fwd10"),
+        modeBtn = $("modeBtn"), fsBtn = $("fsBtn"),
+        progress = $("progress"), fill = $("fill"), knob = $("knob"),
+        timeEl = $("time"),
+        speedBtn = $("speedBtn"), speedPop = $("speedPop"),
+        timerBtn = $("timerBtn"), timerPop = $("timerPop"),
+        muteBtn = $("muteBtn"), vol = $("vol");
+
+  // ===== Icons =====
+  const I = {
+    play: '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+    pause: '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>',
+    back10: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><text x="12" y="16" font-size="7" fill="currentColor" stroke="none" text-anchor="middle" font-weight="700">10</text></svg>',
+    fwd10: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/><text x="12" y="16" font-size="7" fill="currentColor" stroke="none" text-anchor="middle" font-weight="700">10</text></svg>',
+    vol: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>',
+    mute: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>',
+    fs: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+    exitFs: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>',
+    timer: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>',
+    headphones: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-6h3zM3 19a2 2 0 0 0 2 2h1v-6H3z"/></svg>',
+    video: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m22 8-6 4 6 4z"/></svg>',
+  };
+  playBtn.innerHTML = I.play; back10.innerHTML = I.back10; fwd10.innerHTML = I.fwd10;
+  muteBtn.innerHTML = I.vol; fsBtn.innerHTML = I.fs; timerBtn.innerHTML = I.timer;
+
+  // ===== Apply metadata =====
+  topTitleText.textContent = cfg.title;
+  artTitle.textContent = cfg.title;
+  artAuthor.textContent = cfg.author || "";
+  if (cfg.cover) { cover.src = cfg.cover; art.style.backgroundImage = `url("${cfg.cover}")`; }
+  else cover.style.display = "none";
+  document.title = cfg.title + " — Embed";
+
+  if (canSwitch) {
+    modeBtn.style.display = "";
+    modeBtn.innerHTML = showingVideo ? I.headphones : I.video;
+  }
+
+  // ===== Media element selection =====
+  let media; // currently active element
+  function applyMedia() {
+    const cur = media ? media.currentTime : 0;
+    const wasPlaying = media ? !media.paused : false;
+    const wasMuted = media ? media.muted : false;
+    const wasVol = media ? media.volume : 1;
+    const wasRate = media ? media.playbackRate : 1;
+
+    if (showingVideo) {
+      audio.pause(); audio.style.display = "none";
+      video.style.display = "block";
+      art.style.display = "none";
+      if (video.src !== cfg.video) video.src = cfg.video;
+      media = video;
+    } else {
+      video.pause(); video.style.display = "none";
+      audio.style.display = "none"; // hidden, art view shown
+      art.style.display = hasAudio || cfg.cover || cfg.title ? "flex" : "none";
+      if (audio.src !== cfg.audio) audio.src = cfg.audio;
+      media = audio;
+    }
+    media.muted = wasMuted;
+    media.volume = wasVol;
+    media.playbackRate = wasRate;
+    if (cur > 0) {
+      const trySeek = () => { try { media.currentTime = cur; } catch {} };
+      if (media.readyState >= 1) trySeek();
+      else media.addEventListener("loadedmetadata", trySeek, { once: true });
+    }
+    if (wasPlaying) media.play().catch(()=>{});
+    if (canSwitch) modeBtn.innerHTML = showingVideo ? I.headphones : I.video;
+  }
+  applyMedia();
+
+  // ===== Playback controls =====
+  function togglePlay() {
+    if (!media) return;
+    if (media.paused) media.play().catch(()=>{});
+    else media.pause();
+  }
+  function seekBy(d) {
+    if (!media) return;
+    const dur = media.duration || 0;
+    media.currentTime = Math.max(0, Math.min(dur, media.currentTime + d));
+  }
+
+  playBtn.addEventListener("click", togglePlay);
+  back10.addEventListener("click", () => seekBy(-10));
+  fwd10.addEventListener("click", () => seekBy(10));
+  video.addEventListener("click", togglePlay);
+
+  function syncPlayUI() {
+    const playing = media && !media.paused && !media.ended;
+    playBtn.innerHTML = playing ? I.pause : I.play;
+    playBtn.setAttribute("aria-label", playing ? "Pausar" : "Reproducir");
+    bumpOverlay();
+  }
+  ["play","pause","ended"].forEach(ev => {
+    audio.addEventListener(ev, syncPlayUI);
+    video.addEventListener(ev, syncPlayUI);
+  });
+
+  // ===== Time / progress =====
+  function fmt(t) {
+    if (!isFinite(t) || t < 0) t = 0;
+    const h = Math.floor(t / 3600);
+    const m = Math.floor((t % 3600) / 60);
+    const s = Math.floor(t % 60);
+    const mm = h > 0 ? String(m).padStart(2,"0") : String(m);
+    const ss = String(s).padStart(2,"0");
+    return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+  }
+  function updateTime() {
+    if (!media) return;
+    const c = media.currentTime || 0, d = media.duration || 0;
+    timeEl.textContent = `${fmt(c)} / ${fmt(d)}`;
+    const pct = d > 0 ? (c / d) * 100 : 0;
+    fill.style.width = pct + "%";
+    knob.style.left = pct + "%";
+  }
+  ["timeupdate","loadedmetadata","durationchange"].forEach(ev => {
+    audio.addEventListener(ev, updateTime);
+    video.addEventListener(ev, updateTime);
+  });
+  ["waiting","loadstart"].forEach(ev => {
+    audio.addEventListener(ev, () => loader.classList.add("show"));
+    video.addEventListener(ev, () => loader.classList.add("show"));
+  });
+  ["canplay","playing","pause","error"].forEach(ev => {
+    audio.addEventListener(ev, () => loader.classList.remove("show"));
+    video.addEventListener(ev, () => loader.classList.remove("show"));
+  });
+
+  // Progress seek + drag
+  let dragging = false;
+  function seekFromEvent(e) {
+    if (!media || !media.duration) return;
+    const rect = progress.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const pct = Math.max(0, Math.min(1, x / rect.width));
+    media.currentTime = pct * media.duration;
+  }
+  progress.addEventListener("pointerdown", (e) => {
+    dragging = true; progress.setPointerCapture(e.pointerId); seekFromEvent(e);
+  });
+  progress.addEventListener("pointermove", (e) => { if (dragging) seekFromEvent(e); });
+  progress.addEventListener("pointerup", (e) => {
+    dragging = false; try { progress.releasePointerCapture(e.pointerId); } catch {}
+  });
+  progress.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight") seekBy(5);
+    else if (e.key === "ArrowLeft") seekBy(-5);
+  });
+
+  // ===== Volume / mute =====
+  function syncVolUI() {
+    const m = media ? media.muted || media.volume === 0 : false;
+    muteBtn.innerHTML = m ? I.mute : I.vol;
+    vol.value = media ? (media.muted ? 0 : media.volume) : 1;
+  }
+  vol.addEventListener("input", () => {
+    if (!media) return;
+    media.volume = parseFloat(vol.value);
+    media.muted = media.volume === 0;
+    syncVolUI();
+  });
+  muteBtn.addEventListener("click", () => {
+    if (!media) return;
+    media.muted = !media.muted;
+    syncVolUI();
+  });
+
+  // ===== Speed =====
+  const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+  function renderSpeeds() {
+    speedPop.innerHTML = "";
+    SPEEDS.forEach(s => {
+      const b = document.createElement("button");
+      b.textContent = s + "x";
+      if (media && media.playbackRate === s) b.classList.add("active");
+      b.addEventListener("click", () => {
+        if (media) media.playbackRate = s;
+        speedBtn.textContent = s + "x";
+        speedPop.classList.remove("open");
+        renderSpeeds();
+      });
+      speedPop.appendChild(b);
+    });
+  }
+  renderSpeeds();
+  speedBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    timerPop.classList.remove("open");
+    speedPop.classList.toggle("open");
+  });
+
+  // ===== Sleep timer =====
+  let sleepEndsAt = null, sleepInt = null;
+  function clearSleep() {
+    sleepEndsAt = null;
+    if (sleepInt) { clearInterval(sleepInt); sleepInt = null; }
+    renderTimerBtn();
+  }
+  function renderTimerBtn() {
+    if (sleepEndsAt) {
+      const rem = Math.max(0, Math.round((sleepEndsAt - Date.now())/1000));
+      timerBtn.innerHTML = I.timer + `<span style="margin-left:6px;font-size:.78rem">${fmt(rem)}</span>`;
+    } else {
+      timerBtn.innerHTML = I.timer;
+    }
+  }
+  function setSleep(spec) {
+    if (spec === 0 || spec === "0") { clearSleep(); return; }
+    if (spec === "end") {
+      if (!media || !media.duration) return;
+      const remainingMs = (media.duration - media.currentTime) * 1000;
+      sleepEndsAt = Date.now() + remainingMs;
+    } else {
+      sleepEndsAt = Date.now() + parseInt(spec,10) * 60 * 1000;
+    }
+    if (sleepInt) clearInterval(sleepInt);
+    sleepInt = setInterval(() => {
+      const rem = sleepEndsAt - Date.now();
+      renderTimerBtn();
+      if (rem <= 0) { media && media.pause(); clearSleep(); }
+    }, 1000);
+    renderTimerBtn();
+  }
+  renderTimerBtn();
+  timerBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    speedPop.classList.remove("open");
+    timerPop.classList.toggle("open");
+  });
+  timerPop.querySelectorAll("button").forEach(b => {
+    b.addEventListener("click", () => {
+      setSleep(b.dataset.min);
+      timerPop.classList.remove("open");
+    });
+  });
+
+  // Close popovers on outside click
+  document.addEventListener("click", () => {
+    speedPop.classList.remove("open");
+    timerPop.classList.remove("open");
+  });
+
+  // ===== Mode switch =====
+  modeBtn.addEventListener("click", () => {
+    if (!canSwitch) return;
+    showingVideo = !showingVideo;
+    applyMedia();
+    syncPlayUI(); syncVolUI(); updateTime();
+    bumpOverlay();
+  });
+
+  // ===== Fullscreen =====
+  function inFs(){ return !!document.fullscreenElement; }
+  fsBtn.addEventListener("click", async () => {
+    try {
+      if (!inFs()) await document.documentElement.requestFullscreen();
+      else await document.exitFullscreen();
+    } catch {}
+  });
+  document.addEventListener("fullscreenchange", () => {
+    fsBtn.innerHTML = inFs() ? I.exitFs : I.fs;
+  });
+
+  // ===== Auto-hide overlay (only video) =====
+  let hideT = null;
+  function bumpOverlay() {
+    overlay.classList.remove("hide");
+    if (hideT) clearTimeout(hideT);
+    if (showingVideo && media && !media.paused) {
+      hideT = setTimeout(() => overlay.classList.add("hide"), 2800);
+    }
+  }
+  ["mousemove","touchstart","pointerdown","keydown"].forEach(ev =>
+    stage.addEventListener(ev, bumpOverlay)
+  );
+
+  // ===== Keyboard shortcuts =====
+  document.addEventListener("keydown", (e) => {
+    if (e.target instanceof HTMLInputElement) return;
+    switch (e.code) {
+      case "Space": e.preventDefault(); togglePlay(); break;
+      case "ArrowRight": seekBy(10); break;
+      case "ArrowLeft": seekBy(-10); break;
+      case "KeyM": muteBtn.click(); break;
+      case "KeyF": fsBtn.click(); break;
+    }
+  });
+
+  // initial UI sync
+  syncPlayUI(); syncVolUI(); updateTime();
+})();
+</script>
+</body>
+</html>
