@@ -46,7 +46,7 @@ router = async function router() {
         // 1. Ruta raíz
         if (path === '/') {
             renderFeed(container);
-            document.title = 'Balta Media · Conocimiento en acción';
+            document.title = 'Niki Chiton Jesus | Podcast Ixil';
         }
         // 2. Páginas especiales
         else {
@@ -60,7 +60,7 @@ router = async function router() {
                 } else {
                     module.render(container);
                 }
-                document.title = `${path.slice(1).charAt(0).toUpperCase() + path.slice(2)} · Balta Media`;
+                document.title = `${path.slice(1).charAt(0).toUpperCase() + path.slice(2)} · Niki Chiton Jesus`;
                 if (module.header === false) headerContainer.classList.add('hidden');
             }
             // 3. Categoría
@@ -73,30 +73,30 @@ router = async function router() {
                     const categoryEpisodes = DATA.filter(ep => ep.categories && ep.categories.includes(cat));
                     renderGrid(container, categoryEpisodes, cat);
                 }
-                document.title = `${cat} · Balta Media`;
+                document.title = `${cat} · Niki Chiton Jesus`;
             }
             // 4. Serie / Episodio / Novedades / 404
             else {
                 const serie = getSerieByUrl(path);
                 if (serie) {
                     renderSerie(container, path);
-                    document.title = `${serie.titulo_serie} · Balta Media`;
+                    document.title = `${serie.titulo_serie} · Niki Chiton Jesus`;
                 } else {
                     const episodio = getEpisodioByDetailUrl(path);
                     if (episodio) {
                         renderEpisodio(container, episodio.id);
-                        document.title = `${episodio.title} · Balta Media`;
+                        document.title = `${episodio.title} · Niki Chiton Jesus`;
                     } else if (path === '/novedades') {
                         const sorted = [...DATA].sort((a, b) => new Date(b.date) - new Date(a.date));
                         const recientes = sorted.slice(0, 20);
                         const aleatorios = [...DATA].sort(() => 0.5 - Math.random()).slice(0, 10);
                         const combined = [...new Set([...recientes, ...aleatorios])];
                         renderGrid(container, combined, 'Novedades y Recomendaciones');
-                        document.title = 'Novedades · Balta Media';
+                        document.title = 'Novedades · Niki Chiton Jesus';
                     } else {
                         const module404 = await import('./404.js');
                         module404.render(container);
-                        document.title = 'Página no encontrada · Balta Media';
+                        document.title = 'Página no encontrada · Niki Chiton Jesus';
                         if (module404.header === false) headerContainer.classList.add('hidden');
                     }
                 }
@@ -183,4 +183,4 @@ if (contentEl) observer.observe(contentEl, { childList: true, subtree: true });
 
 // Inicializar
 router();
-console.log('✅ Main.js cargado - Router global expuesto como window.router');
+console.log('cargando - Router global expuesto como window.router');
